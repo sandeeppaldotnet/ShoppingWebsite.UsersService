@@ -1,0 +1,42 @@
+﻿version: '3.8'
+
+services:
+  users-db:
+    image: postgres
+    container_name: users-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: ShoppingCartUsers
+    ports:
+      - "5433:5432"  # Postgres is now accessible on port 5433 on the host
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  users-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # API is accessible on port 8080
+    environment:
+      ConnectionStrings__PostgresConnection: "Host=users-db;Port=5432;Database=ShoppingCartUsers;Username=postgres;Password=test123"
+
+      # 🔐 JWT Config
+      Jwt__Key: kjldsafjafjsdfjklcvbcbxcvbvcbcvbcvbnbcvbcxvbgfxbcvbsjkldfsss
+      Jwt__Issuer: eCommerceApp
+      Jwt__Audience: eCommerceClient
+      Jwt__ExpiresInMinutes: 60
+    depends_on:
+      - users-db
+    networks:
+      - app-network
+
+volumes:
+  pgdata:
+
+networks:
+  app-network:
+    driver: bridge

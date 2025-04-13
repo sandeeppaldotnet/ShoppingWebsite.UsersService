@@ -22,7 +22,9 @@ internal class UsersService : IUsersService
 
   public async Task<AuthenticationResponse?> Login(LoginRequest loginRequest)
   {
-    ApplicationUser? user = await _usersRepository.GetUserByEmailAndPassword(loginRequest.Email, loginRequest.Password);
+        try
+        {
+            ApplicationUser? user = await _usersRepository.GetUserByEmailAndPassword(loginRequest.Email, loginRequest.Password);
 
     if (user == null)
     {
@@ -31,26 +33,37 @@ internal class UsersService : IUsersService
 
     //return new AuthenticationResponse(user.UserID, user.Email, user.PersonName, user.Gender, "token", Success: true);
     return _mapper.Map<AuthenticationResponse>(user) with { Success = true, Token = _jwtTokenService.GenerateToken(user.UserID,user?.Email) };
-  }
+        }
+        catch (Exception ex)
+        {
+            throw;
+
+        }
+    }
 
 
   public async Task<AuthenticationResponse?> Register(RegisterRequest registerRequest)
   {
-    //Create a new ApplicationUser object from RegisterRequest
-    ApplicationUser user = _mapper.Map<ApplicationUser>(registerRequest);
-    ApplicationUser isExistUser = await _usersRepository.GetUserByEmail(registerRequest.Email);
-        if (isExistUser != null)
+        try
         {
-            return new AuthenticationResponse() { Success = false, Message = "User already exists" };
-        }
-            ApplicationUser? registeredUser = await _usersRepository.AddUser(user);
-    if (registeredUser == null)
-    {
-      return null;
-    }
+            //Create a new ApplicationUser object from RegisterRequest
+            ApplicationUser user = _mapper.Map<ApplicationUser>(registerRequest);
 
-    //Return success response
-    //return new AuthenticationResponse(registeredUser.UserID, registeredUser.Email, registeredUser.PersonName, registeredUser.Gender, "token", Success: true);
-    return _mapper.Map<AuthenticationResponse>(registeredUser) with { Success = true, Token = _jwtTokenService.GenerateToken(user.UserID, user?.Email) };
+            ApplicationUser? registeredUser = await _usersRepository.AddUser(user);
+            if (registeredUser == null)
+            {
+
+                return null;
+            }
+
+            //Return success response
+            //return new AuthenticationResponse(registeredUser.UserID, registeredUser.Email, registeredUser.PersonName, registeredUser.Gender, "token", Success: true);
+            return _mapper.Map<AuthenticationResponse>(registeredUser) with { Success = true, Token = _jwtTokenService.GenerateToken(user.UserID, user?.Email) };
+        }
+        catch(Exception ex)
+        {
+            throw;
+
+        }
   }
 }

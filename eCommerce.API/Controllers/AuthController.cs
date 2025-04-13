@@ -16,34 +16,43 @@ namespace eCommerce.API.Controllers
       _usersService = usersService;
     }
 
-    //Endpoint for user registration use case
-    [HttpPost("register")] //POST api/auth/register
-    public async Task<IActionResult> Register(RegisterRequest registerRequest)
-    {
-      //Check for invalid registerRequest
-      if (registerRequest == null)
-      {
-        return BadRequest("Invalid registration data");
-      }
+        //Endpoint for user registration use case
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(RegisterRequest registerRequest)
+        {
+            try
+            {
+                if (registerRequest == null)
+                    return BadRequest("Invalid registration data");
 
-      //Call the UsersService to handle registration
-      AuthenticationResponse? authenticationResponse = await _usersService.Register(registerRequest);
+                var result = await _usersService.Register(registerRequest);
+                return Ok(result);
+               
+                
+            }
+            catch (Exception ex)
+            {
+                // This helps identify the exact issue
+                return StatusCode(500, new
+                {
+                    message = "Internal Server Error",
+                    detail = ex.Message,
+                    inner = ex.InnerException?.Message
+                });
+            }
+        }
 
-      if (authenticationResponse == null || authenticationResponse.Success == false)
-      {
-        return BadRequest(authenticationResponse);
-      }
-
-      return Ok(authenticationResponse);
-    }
 
 
-    //Endpoint for user login use case
-    [HttpPost("login")]
+
+        //Endpoint for user login use case
+        [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest loginRequest)
     {
-      //Check for invalid LoginRequest
-      if (loginRequest == null)
+            try
+            {
+                //Check for invalid LoginRequest
+                if (loginRequest == null)
       {
         return BadRequest("Invalid login data");
       }
@@ -56,6 +65,17 @@ namespace eCommerce.API.Controllers
       }
 
       return Ok(authenticationResponse);
-    }
+            }
+            catch (Exception ex)
+            {
+                // This helps identify the exact issue
+                return StatusCode(500, new
+                {
+                    message = "Internal Server Error",
+                    detail = ex.Message,
+                    inner = ex.InnerException?.Message
+                });
+            }
+        }
   }
 }

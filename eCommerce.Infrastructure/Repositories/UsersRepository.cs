@@ -17,44 +17,52 @@ internal class UsersRepository : IUsersRepository
 
     //public async Task<ApplicationUser?> AddUser(ApplicationUser user)
     //{
-    //  //Generate a new unique user ID for the user
-    //  user.UserID = Guid.NewGuid();
+    //    //Generate a new unique user ID for the user
+    //    user.UserID = Guid.NewGuid();
 
-    //  // SQL Query to insert user data into the "Users" table.
-    //  string query = "INSERT INTO public.\"users\"(\"email\", \"personname\", \"gender\", \"password\") VALUES(@Email, @PersonName, @Gender, @Password)";
-    //  int rowCountAffected = await _dbContext.DbConnection.ExecuteAsync(query, user);
+    //    // SQL Query to insert user data into the "Users" table.
+    //    string query = "INSERT INTO public.\"users\"(\"email\", \"personname\", \"gender\", \"password\") VALUES(@Email, @PersonName, @Gender, @Password)";
+    //    int rowCountAffected = await _dbContext.DbConnection.ExecuteAsync(query, user);
 
-    //  if (rowCountAffected > 0 )
-    //  {
-    //    return user;
-    //  }
-    //  else
-    //  {
-    //    return null;
-    //  }
+    //    if (rowCountAffected > 0)
+    //    {
+    //        return user;
+    //    }
+    //    else
+    //    {
+    //        return null;
+    //    }
     //}
     public async Task<ApplicationUser?> AddUser(ApplicationUser user)
     {
-        
-        const string query = "SELECT insert_user(@Email, @PersonName, @Gender, @Password)";
-
-        var parameters = new
+        try
         {
-            Email = user.Email,
-            PersonName = user.PersonName,
-            Gender = user.Gender,
-            Password = user.Password
-        };
+            //userid, email, password, personname, gender
+            const string query = "SELECT insert_user(@Email,@Password,@PersonName, @Gender)";
+            var parameters = new
+            {
+                Email = user.Email,
+                Password = user.Password,
+                PersonName = user.PersonName,
+                Gender = user.Gender,
+                
+            };
 
-        Guid? newUserId = await _dbContext.DbConnection.ExecuteScalarAsync<Guid?>(query, parameters);
+            Guid? newUserId = await _dbContext.DbConnection.ExecuteScalarAsync<Guid?>(query, parameters);
 
-        if (newUserId != null)
-        {
-            user.UserID = newUserId.Value;
-            return user;
+            if (newUserId != null)
+            {
+                user.UserID = newUserId.Value;
+                return user;
+            }
+
+            return null;
         }
-
-        return null;
+        catch (Exception ex)
+        {
+            Console.WriteLine("🔥 Exception in AddUser: " + ex.Message);
+            throw; // Still bubble it up
+        }
     }
 
     public async Task<ApplicationUser?> GetUserByEmailAndPassword(string? email, string? password)
